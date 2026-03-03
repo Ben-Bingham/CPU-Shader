@@ -20,7 +20,13 @@
 #include "MoveCamera.h"
 #include "Boilerplate.h"
 
+#include "CPUShader.h"
+
 using namespace RenderingUtilities;
+
+CPUShader testShader = [](glm::vec2 uv, glm::ivec2 screenSize, float time, void* userData) {
+    return glm::vec4{ uv.x, uv.y, 0.0f, 1.0f };
+};
 
 int main() {
     GLFWwindow* window = InitGraphics();
@@ -39,11 +45,13 @@ int main() {
 
     VertexAttributeObject vao{ };
 
-    Shape triangle = GetTriangle();
+    CPUShader cpuShader = testShader;
 
-    VertexBufferObject vbo{ triangle.vertices };
+    Shape rect = GetSquare();
 
-    ElementBufferObject ebo{ triangle.indices };
+    VertexBufferObject vbo{ rect.vertices };
+
+    ElementBufferObject ebo{ rect.indices };
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -63,6 +71,7 @@ int main() {
 
     std::chrono::duration<double> frameTime{ };
     std::chrono::duration<double> renderTime{ };
+    std::chrono::duration<double> cpuShaderTime{ };
 
     bool mouseOverViewPort{ false };
     glm::ivec2 viewportOffset{ 0, 0 };
@@ -75,6 +84,29 @@ int main() {
         glm::ivec2 mousePositionWRTViewport{ mousePosition.x - viewportOffset.x, lastFrameViewportSize.y - (viewportOffset.y - mousePosition.y) };
 
         MoveCamera(camera, window, static_cast<float>(frameTime.count()), mousePositionWRTViewport, lastFrameViewportSize, mouseOverViewPort);
+
+        {
+            TimeScope cpuShaderTimeScope{ &cpuShaderTime };
+
+            glm::ivec2 screenSize = rendererTarget.GetSize();
+            float time = glfwGetTime();
+            
+            std::vector<std::vector<glm::vec4>> screenBuffer{ };
+            screenBuffer.resize(screenSize.x);
+
+            for (size_t x = 0; x < screenSize.x; ++x) {
+                std::vector<glm::vec4> column{ };
+                column.resize(screenSize.y);
+
+                screenBuffer[x] = column;
+
+                for (size_t y = 0; y < screenSize.y; ++y) {
+                    glm::vec2 uv{ (float)x / screenSize.x, (float)y / screenSize.y };
+
+                    screenBuffer[x][y] = cpuShader(uv, screenSize, time, nullptr);
+                }
+            }
+        }
 
         {
             TimeScope renderingTimeScope{ &renderTime };
@@ -94,7 +126,7 @@ int main() {
             solidShader.SetMat4("mvp", mvp);
 
             vao.Bind();
-            glDrawElements(GL_TRIANGLES, triangle.Size(), GL_UNSIGNED_INT, nullptr);
+            glDrawElements(GL_TRIANGLES, rect.Size(), GL_UNSIGNED_INT, nullptr);
 
             rendererTarget.Unbind();
         }
