@@ -36,9 +36,9 @@ int main() {
 
     RenderTarget rendererTarget{ defaultFramebufferSize };
 
-    Shader solidShader{
-        "assets\\shaders\\solid.vert",
-        "assets\\shaders\\solid.frag"
+    Shader displayBuffer{
+        "assets\\shaders\\displayBuffer.vert",
+        "assets\\shaders\\displayBuffer.frag"
     };
 
     Camera camera{ };
@@ -113,12 +113,9 @@ int main() {
             glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            solidShader.Bind();
-            solidShader.SetVec3("color", glm::vec3{ 1.0f, 0.0f, 0.0f });
-
+            displayBuffer.Bind();
             glm::mat4 mvp = glm::scale(glm::mat4{ 1.0f }, glm::vec3{ 2.0 });
-
-            solidShader.SetMat4("mvp", mvp);
+            displayBuffer.SetMat4("mvp", mvp);
 
             vao.Bind();
             glDrawElements(GL_TRIANGLES, rect.Size(), GL_UNSIGNED_INT, nullptr);
