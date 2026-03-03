@@ -66,9 +66,6 @@ int main() {
     vbo.Unbind();
     ebo.Unbind();
 
-    Transform transform{ };
-    transform.position = glm::vec3{ 0.0f, 0.0f, 5.0f };
-
     std::chrono::duration<double> frameTime{ };
     std::chrono::duration<double> renderTime{ };
     std::chrono::duration<double> cpuRenderTime{ };
@@ -119,9 +116,7 @@ int main() {
             solidShader.Bind();
             solidShader.SetVec3("color", glm::vec3{ 1.0f, 0.0f, 0.0f });
 
-            glm::mat4 projection = glm::perspective(glm::radians(camera.fov), (float)rendererTarget.GetSize().x / (float)rendererTarget.GetSize().y, camera.nearPlane, camera.farPlane);
-            transform.CalculateMatrix();
-            glm::mat4 mvp = projection * camera.View() * transform.matrix;
+            glm::mat4 mvp = glm::scale(glm::mat4{ 1.0f }, glm::vec3{ 2.0 });
 
             solidShader.SetMat4("mvp", mvp);
 
