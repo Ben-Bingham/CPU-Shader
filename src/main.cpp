@@ -71,7 +71,7 @@ int main() {
 
     std::chrono::duration<double> frameTime{ };
     std::chrono::duration<double> renderTime{ };
-    std::chrono::duration<double> cpuShaderTime{ };
+    std::chrono::duration<double> cpuRenderTime{ };
 
     bool mouseOverViewPort{ false };
     glm::ivec2 viewportOffset{ 0, 0 };
@@ -86,7 +86,7 @@ int main() {
         MoveCamera(camera, window, static_cast<float>(frameTime.count()), mousePositionWRTViewport, lastFrameViewportSize, mouseOverViewPort);
 
         {
-            TimeScope cpuShaderTimeScope{ &cpuShaderTime };
+            TimeScope cpuShaderTimeScope{ &cpuRenderTime };
 
             glm::ivec2 screenSize = rendererTarget.GetSize();
             float time = glfwGetTime();
@@ -142,6 +142,10 @@ int main() {
         size_t changedPointLightIndex{ 0 };
 
         glm::ivec2 newViewportSize{ };
+
+        { ImGui::Begin("Info");
+            ImGui::Text("CPU Render Time: %4.3f ms", cpuRenderTime.count() * 1000);
+        } ImGui::End(); // Info
 
         { ImGui::Begin("Viewport");
             // Needs to be the first call after "Begin"
